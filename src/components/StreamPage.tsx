@@ -46,10 +46,12 @@ export default function StreamPage({ streamer }: StreamPageProps) {
             <h2 className="text-xl font-semibold text-pink-400 mb-4">Schedule</h2>
             <div className="space-y-2">
               {Object.entries(streamer.schedule).map(([day, time]) => (
-                <div key={day} className="flex justify-between">
-                  <span className="text-gray-400 capitalize">{day}</span>
-                  <span className="text-white">{time}</span>
-                </div>
+                time && (
+                  <div key={day} className="flex justify-between">
+                    <span className="text-gray-400 capitalize">{day}</span>
+                    <span className="text-white">{time}</span>
+                  </div>
+                )
               ))}
             </div>
           </div>
