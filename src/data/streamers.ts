@@ -1,4 +1,28 @@
-export const streamers = [
+export type Schedule = {
+  [key: string]: string | undefined;
+};
+
+export type Streamer = {
+  id: number;
+  username: string;
+  displayName: string;
+  avatar: string;
+  isLive: boolean;
+  viewers: number;
+  youtubeUrl: string;
+  bio: string;
+  solanaAddress: string;
+  totalDonations: number;
+  topDonation: number;
+  socialLinks: {
+    twitter?: string;
+    instagram?: string;
+    tiktok?: string;
+  };
+  schedule: Schedule;
+};
+
+export const streamers: Streamer[] = [
   {
     id: 1,
     username: "amanda",
