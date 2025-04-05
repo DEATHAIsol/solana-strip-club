@@ -1,27 +1,61 @@
 'use client';
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { database } from '@/lib/firebase';
+import { ref, push, onValue, off } from 'firebase/database';
 
 interface ChatProps {
   streamerName: string;
 }
 
-export default function Chat({ streamerName }: ChatProps) {
-  const { connected } = useWallet();
-  const [messages, setMessages] = useState<Array<{text: string; sender: string}>>([
-    { text: "Welcome to the stream! 💖", sender: "System" },
-    { text: "Remember to connect your wallet to chat! 💝", sender: "System" }
-  ]);
-  const [newMessage, setNewMessage] = useState('');
+interface Message {
+  text: string;
+  sender: string;
+  timestamp: number;
+}
 
-  const handleSubmit = (e: React.FormEvent) => {
+export default function Chat({ streamerName }: ChatProps) {
+  const { connected, publicKey } = useWallet();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const chatRef = database ? ref(database, `chats/${streamerName}`) : null;
+
+  useEffect(() => {
+    if (!chatRef) return;
+
+    // Listen for new messages
+    onValue(chatRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const messageList = Object.values(data) as Message[];
+        setMessages(messageList.sort((a, b) => a.timestamp - b.timestamp));
+      }
+    });
+
+    return () => {
+      if (chatRef) off(chatRef);
+    };
+  }, [streamerName]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !connected) return;
+    if (!newMessage.trim() || !connected || !publicKey || !chatRef) return;
     
-    setMessages([...messages, { text: newMessage, sender: 'You' }]);
-    setNewMessage('');
+    const username = publicKey.toString().slice(0, 5);
+    const message: Message = {
+      text: newMessage,
+      sender: username,
+      timestamp: Date.now()
+    };
+
+    try {
+      await push(chatRef, message);
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   return (
@@ -31,12 +65,18 @@ export default function Chat({ streamerName }: ChatProps) {
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-900/95 to-gray-900/90">
-        {messages.map((msg, i) => (
-          <div key={i} className="flex flex-col">
-            <span className="text-sm text-pink-300/80">{msg.sender}</span>
-            <span className="text-white bg-gray-800/50 rounded-lg p-2 mt-1">{msg.text}</span>
+        {messages.length === 0 ? (
+          <div className="text-center text-gray-400">
+            <p>Be the first to chat! 💖</p>
           </div>
-        ))}
+        ) : (
+          messages.map((msg, i) => (
+            <div key={i} className="flex flex-col">
+              <span className="text-sm text-pink-300/80">{msg.sender}</span>
+              <span className="text-white bg-gray-800/50 rounded-lg p-2 mt-1">{msg.text}</span>
+            </div>
+          ))
+        )}
       </div>
 
       {connected ? (
