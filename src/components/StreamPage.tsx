@@ -7,11 +7,17 @@ import DonateButton from './DonateButton';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { toast } from 'react-hot-toast';
+import { database } from '@/lib/firebase';
+import { ref, onValue, push, set, serverTimestamp, query, orderByChild, startAt } from 'firebase/database';
+import { moderateMessage } from '@/utils/chatModeration';
+import { getAutomatedResponse, isCommand, handleCommand } from '@/utils/chatAutomation';
 
 interface ChatMessage {
   user: string;
   message: string;
   timestamp: number;
+  publicKey?: string;
+  isSystem?: boolean;
 }
 
 interface StreamPageProps {
@@ -19,20 +25,9 @@ interface StreamPageProps {
 }
 
 export default function StreamPage({ streamer }: StreamPageProps) {
-  const { connected } = useWallet();
+  const { connected, publicKey } = useWallet();
   const [chatMessage, setChatMessage] = useState('');
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { 
-      user: 'System', 
-      message: 'Welcome to the chat!',
-      timestamp: Date.now()
-    },
-    { 
-      user: streamer.displayName, 
-      message: 'Hey everyone! Thanks for joining my stream!',
-      timestamp: Date.now()
-    }
-  ]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [showControls, setShowControls] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,20 +44,32 @@ export default function StreamPage({ streamer }: StreamPageProps) {
     }
   }, [volume]);
 
-  // Clean up expired messages every second
+  // Initialize Firebase listeners for chat
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      setChatMessages(prevMessages => 
-        prevMessages.filter(msg => {
-          // Keep messages less than 5 minutes old
-          return now - msg.timestamp < 5 * 60 * 1000;
-        })
-      );
-    }, 1000);
+    // Reference to this streamer's chat messages
+    const chatRef = ref(database, `chats/${streamer.username}`);
+    
+    // Query for messages from the last 5 minutes
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    const recentMessagesQuery = query(
+      chatRef,
+      orderByChild('timestamp'),
+      startAt(fiveMinutesAgo)
+    );
 
-    return () => clearInterval(interval);
-  }, []);
+    // Listen for new messages
+    const unsubscribe = onValue(recentMessagesQuery, (snapshot) => {
+      const messages: ChatMessage[] = [];
+      snapshot.forEach((childSnapshot) => {
+        const message = childSnapshot.val();
+        messages.push(message);
+      });
+      setChatMessages(messages);
+    });
+
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, [streamer.username]);
 
   const tipLevels = [
     { amount: 0.5, icon: <FaHeart className="text-pink-500" />, reward: 'Shoutout' },
@@ -77,19 +84,73 @@ export default function StreamPage({ streamer }: StreamPageProps) {
     setIsModalOpen(true);
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!connected) {
+    if (!connected || !publicKey) {
       toast.error('Please connect your wallet to chat');
       return;
     }
+    
     if (chatMessage.trim()) {
-      setChatMessages([...chatMessages, { 
-        user: 'You', 
-        message: chatMessage,
-        timestamp: Date.now()
-      }]);
-      setChatMessage('');
+      try {
+        // Check if it's a command
+        if (isCommand(chatMessage)) {
+          const response = handleCommand(chatMessage);
+          if (response) {
+            // Create a system message with the automated response
+            const systemMessage = {
+              user: 'System',
+              message: response,
+              timestamp: Date.now(),
+              isSystem: true
+            };
+            await push(ref(database, `chats/${streamer.username}`), systemMessage);
+            setChatMessage('');
+            return;
+          }
+        }
+
+        // Moderate the message
+        const { isAllowed, moderatedMessage, reason } = moderateMessage(chatMessage.trim());
+        
+        if (!isAllowed) {
+          toast.error(reason || 'Message not allowed');
+          return;
+        }
+
+        // Reference to this streamer's chat messages
+        const chatRef = ref(database, `chats/${streamer.username}`);
+        
+        // Create a new message with moderated content
+        const newMessage = {
+          user: 'You',
+          message: moderatedMessage,
+          timestamp: Date.now(),
+          publicKey: publicKey.toString()
+        };
+
+        // Push the new message
+        await push(chatRef, newMessage);
+
+        // Check for automated responses
+        const automatedResponse = getAutomatedResponse(moderatedMessage);
+        if (automatedResponse) {
+          // Create a system message with the automated response
+          const systemMessage = {
+            user: 'System',
+            message: automatedResponse,
+            timestamp: Date.now(),
+            isSystem: true
+          };
+          await push(chatRef, systemMessage);
+        }
+        
+        // Clear input
+        setChatMessage('');
+      } catch (error) {
+        console.error('Error sending message:', error);
+        toast.error('Failed to send message');
+      }
     }
   };
 
@@ -271,8 +332,13 @@ export default function StreamPage({ streamer }: StreamPageProps) {
               <div className="flex-1 overflow-y-auto space-y-2 mb-3 sm:mb-4">
                 {chatMessages.map((msg, i) => (
                   <div key={i} className="bg-black/40 p-2 rounded-lg text-sm sm:text-base">
-                    <span className="font-bold">{msg.user}: </span>
-                    <span>{msg.message}</span>
+                    <span className={`font-bold ${
+                      msg.isSystem ? 'text-green-400' : 
+                      msg.publicKey === publicKey?.toString() ? 'text-pink-400' : 'text-white'
+                    }`}>
+                      {msg.user}:
+                    </span>
+                    <span className="ml-2">{msg.message}</span>
                     <span className="text-xs text-gray-500 ml-2">
                       {Math.floor((5 * 60 * 1000 - (Date.now() - msg.timestamp)) / 1000)}s
                     </span>
