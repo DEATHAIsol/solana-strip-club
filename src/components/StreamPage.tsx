@@ -128,6 +128,7 @@ export default function StreamPage({ streamer }: StreamPageProps) {
   // Determine if we should show the username modal - simplified logic
   const shouldShowUsernameModal = connected && !username;
 
+  // Username submission handler
   const handleUsernameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('🎯 Username submit triggered:', { tempUsername });
@@ -186,6 +187,13 @@ export default function StreamPage({ streamer }: StreamPageProps) {
       console.error('⚠️ Error saving username:', error);
       toast.error('Failed to save username. Please try again.');
     }
+  };
+
+  // Explicit button click handler
+  const handleSetUsernameClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log('🖱️ Set Username button clicked');
+    handleUsernameSubmit(e as any);
   };
 
   // Initialize video volume
@@ -381,7 +389,7 @@ export default function StreamPage({ streamer }: StreamPageProps) {
       {/* Username Modal */}
       {shouldShowUsernameModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]">
-          <div className="bg-gray-900 p-6 rounded-lg border border-pink-500/20 w-96">
+          <div className="bg-gray-900 p-6 rounded-lg border border-pink-500/20 w-96" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-pink-400 mb-4">Create your chat username</h3>
             <form onSubmit={handleUsernameSubmit} className="space-y-4">
               <div>
@@ -398,7 +406,8 @@ export default function StreamPage({ streamer }: StreamPageProps) {
               </div>
               <button
                 type="submit"
-                className="w-full bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600 transition-colors"
+                onClick={handleSetUsernameClick}
+                className="w-full bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600 transition-colors active:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
               >
                 Set Username
               </button>
