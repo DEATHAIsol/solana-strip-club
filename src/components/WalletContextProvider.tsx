@@ -20,7 +20,7 @@ const WalletContextProvider: FC<WalletContextProviderProps> = ({ children }) => 
 
   const network = WalletAdapterNetwork.Mainnet;
   const endpoint = useMemo(() => 
-    process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://ssc-dao.genesysgo.net'
+    process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://rpc.helius.xyz/?api-key=c12aa389-c902-4440-84dc-5b7000307b07'
   , []);
   
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);

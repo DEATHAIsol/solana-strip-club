@@ -15,12 +15,12 @@ interface DonateButtonProps {
   onClose?: () => void;
 }
 
-// Use mainnet connection with GenesysGo RPC
+// Use mainnet connection with Helius RPC
 const connection = new Connection(
-  process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://ssc-dao.genesysgo.net',
+  process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://rpc.helius.xyz/?api-key=c12aa389-c902-4440-84dc-5b7000307b07',
   {
     commitment: 'confirmed',
-    wsEndpoint: process.env.NEXT_PUBLIC_SOLANA_RPC_URL?.replace('https://', 'wss://') || 'wss://ssc-dao.genesysgo.net',
+    wsEndpoint: process.env.NEXT_PUBLIC_SOLANA_RPC_URL?.replace('https://', 'wss://') || undefined,
     confirmTransactionInitialTimeout: 60000, // 60 seconds
   }
 );
