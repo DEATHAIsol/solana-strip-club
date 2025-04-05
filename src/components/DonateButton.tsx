@@ -21,6 +21,7 @@ const connection = new Connection(
   {
     commitment: 'confirmed',
     wsEndpoint: process.env.NEXT_PUBLIC_SOLANA_RPC_URL?.replace('https://', 'wss://') || 'wss://api.mainnet-beta.solana.com',
+    confirmTransactionInitialTimeout: 60000, // 60 seconds
   }
 );
 const donationProgram = new DonationProgram();
@@ -111,12 +112,12 @@ export default function DonateButton({
         } else {
           toast.error('Failed to send donation', { id: toastId });
         }
+      } finally {
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Connection error:', error);
       toast.error('Failed to connect to Solana network');
-    } finally {
-      setIsLoading(false);
     }
   };
 
