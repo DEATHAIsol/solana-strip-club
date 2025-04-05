@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { FaHeart, FaStar, FaCrown, FaGem, FaFire, FaVolumeUp, FaVolumeDown, FaVolumeMute, FaExpand } from 'react-icons/fa';
 import { Streamer } from '@/data/streamers';
 import DonateButton from './DonateButton';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { toast } from 'react-hot-toast';
 
 interface ChatMessage {
   user: string;
@@ -16,6 +19,7 @@ interface StreamPageProps {
 }
 
 export default function StreamPage({ streamer }: StreamPageProps) {
+  const { connected } = useWallet();
   const [chatMessage, setChatMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { 
@@ -75,6 +79,10 @@ export default function StreamPage({ streamer }: StreamPageProps) {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!connected) {
+      toast.error('Please connect your wallet to chat');
+      return;
+    }
     if (chatMessage.trim()) {
       setChatMessages([...chatMessages, { 
         user: 'You', 
@@ -271,23 +279,30 @@ export default function StreamPage({ streamer }: StreamPageProps) {
                   </div>
                 ))}
               </div>
-              <form onSubmit={handleSendMessage} className="mt-auto">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1 bg-black/40 p-2 rounded-lg text-base"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-pink-500 hover:bg-pink-600 active:bg-pink-700 px-4 py-2 rounded-lg text-base"
-                  >
-                    Send
-                  </button>
+              {connected ? (
+                <form onSubmit={handleSendMessage} className="mt-auto">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      placeholder="Type a message..."
+                      className="flex-1 bg-black/40 p-2 rounded-lg text-base"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-pink-500 hover:bg-pink-600 active:bg-pink-700 px-4 py-2 rounded-lg text-base"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="mt-auto text-center p-4 bg-black/20 rounded-lg">
+                  <p className="text-gray-400 mb-3">Connect your wallet to join the chat</p>
+                  <WalletMultiButton className="!bg-pink-500 !text-white hover:!bg-pink-600 active:!bg-pink-700 !py-2 !text-base !rounded-lg" />
                 </div>
-              </form>
+              )}
             </div>
           </div>
 
