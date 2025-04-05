@@ -100,17 +100,30 @@ export default function StreamPage({ streamer }: StreamPageProps) {
       }
     };
 
-    if (connected && publicKey) {
-      console.log('🎯 Wallet connected - checking username');
-      setHasCheckedUsername(false);
-      checkUsername();
-    } else {
+    // Reset states when wallet disconnects
+    if (!connected || !publicKey) {
       console.log('🔌 Wallet disconnected - resetting states');
       setUsername('');
       setTempUsername('');
       setHasCheckedUsername(false);
+      return;
     }
+
+    // Check username immediately when wallet connects
+    console.log('🎯 Wallet connected - checking username');
+    checkUsername();
   }, [connected, publicKey]);
+
+  // Debug modal visibility
+  useEffect(() => {
+    console.log('🎭 Modal Visibility Check:', {
+      connected,
+      username,
+      hasCheckedUsername,
+      shouldShow: connected && !username && hasCheckedUsername,
+      timestamp: new Date().toISOString()
+    });
+  }, [connected, username, hasCheckedUsername]);
 
   const handleUsernameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -358,8 +371,8 @@ export default function StreamPage({ streamer }: StreamPageProps) {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Determine if we should show the username modal
-  const shouldShowUsernameModal = connected && !username && hasCheckedUsername;
+  // Determine if we should show the username modal - simplified logic
+  const shouldShowUsernameModal = connected && !username;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-2 sm:p-4">
