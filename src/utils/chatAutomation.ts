@@ -15,6 +15,10 @@ const automatedResponses = new Map<string[], string>([
 
 // Function to check if message contains any trigger words and get automated response
 export function getAutomatedResponse(message: string): string | null {
+  if (!message || typeof message !== 'string') {
+    return null;
+  }
+
   // Convert message to lowercase for case-insensitive matching
   const lowerMessage = message.toLowerCase().trim();
 
@@ -22,9 +26,14 @@ export function getAutomatedResponse(message: string): string | null {
   for (const [triggers, response] of automatedResponses) {
     // If any trigger word is found in the message
     if (triggers.some(trigger => {
-      // Create a regex to match the word (with word boundaries)
-      const regex = new RegExp(`\\b${trigger}\\b`, 'i');
-      return regex.test(lowerMessage);
+      try {
+        // Create a regex to match the word (with word boundaries)
+        const regex = new RegExp(`\\b${trigger}\\b`, 'i');
+        return regex.test(lowerMessage);
+      } catch (error) {
+        console.error('Error creating regex for trigger:', trigger, error);
+        return false;
+      }
     })) {
       return response;
     }
@@ -36,11 +45,18 @@ export function getAutomatedResponse(message: string): string | null {
 
 // Function to check if a message is a command (starts with !)
 export function isCommand(message: string): boolean {
+  if (!message || typeof message !== 'string') {
+    return false;
+  }
   return message.trim().startsWith('!');
 }
 
 // Function to handle command messages
 export function handleCommand(message: string): string | null {
+  if (!message || typeof message !== 'string') {
+    return null;
+  }
+
   // Remove the ! and trim
   const command = message.slice(1).toLowerCase().trim();
 

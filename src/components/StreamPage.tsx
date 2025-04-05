@@ -18,6 +18,7 @@ interface ChatMessage {
   timestamp: number;
   publicKey?: string;
   isSystem?: boolean;
+  key?: string;
 }
 
 interface StreamPageProps {
@@ -61,7 +62,8 @@ export default function StreamPage({ streamer }: StreamPageProps) {
     const unsubscribe = onValue(recentMessagesQuery, (snapshot) => {
       const messages: ChatMessage[] = [];
       snapshot.forEach((childSnapshot) => {
-        const message = childSnapshot.val();
+        const message = childSnapshot.val() as ChatMessage;
+        message.key = childSnapshot.key || undefined;
         messages.push(message);
       });
       setChatMessages(messages);
