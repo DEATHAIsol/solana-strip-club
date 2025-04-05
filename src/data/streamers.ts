@@ -48,9 +48,13 @@ export const streamers: Streamer[] = [
       onlyfans: "https://onlyfans.com/amanda"
     },
     schedule: {
-      monday: "8:00 PM - 12:00 AM",
-      wednesday: "9:00 PM - 1:00 AM",
-      friday: "10:00 PM - 2:00 AM"
+      monday: "1:00 PM - 8:00 PM, 8:00 PM - 12:00 AM",
+      tuesday: "1:00 PM - 8:00 PM",
+      wednesday: "1:00 PM - 8:00 PM, 9:00 PM - 1:00 AM",
+      thursday: "1:00 PM - 8:00 PM",
+      friday: "1:00 PM - 8:00 PM, 10:00 PM - 2:00 AM",
+      saturday: "1:00 PM - 8:00 PM",
+      sunday: "1:00 PM - 8:00 PM"
     }
   },
   {
@@ -70,9 +74,13 @@ export const streamers: Streamer[] = [
       instagram: "https://instagram.com/caitlin"
     },
     schedule: {
-      tuesday: "7:00 PM - 11:00 PM",
-      thursday: "8:00 PM - 12:00 AM",
-      saturday: "9:00 PM - 1:00 AM"
+      monday: "1:00 PM - 8:00 PM",
+      tuesday: "1:00 PM - 8:00 PM, 8:30 PM - 12:30 AM",
+      wednesday: "1:00 PM - 8:00 PM",
+      thursday: "1:00 PM - 8:00 PM, 9:00 PM - 1:00 AM",
+      friday: "1:00 PM - 8:00 PM",
+      saturday: "1:00 PM - 8:00 PM, 9:30 PM - 1:30 AM",
+      sunday: "1:00 PM - 8:00 PM"
     }
   },
   {
@@ -93,9 +101,13 @@ export const streamers: Streamer[] = [
       onlyfans: "https://onlyfans.com/georgia"
     },
     schedule: {
-      wednesday: "6:00 PM - 10:00 PM",
-      friday: "7:00 PM - 11:00 PM",
-      sunday: "8:00 PM - 12:00 AM"
+      monday: "1:00 PM - 8:00 PM",
+      tuesday: "1:00 PM - 8:00 PM",
+      wednesday: "1:00 PM - 8:00 PM, 9:30 PM - 1:30 AM",
+      thursday: "1:00 PM - 8:00 PM",
+      friday: "1:00 PM - 8:00 PM, 10:00 PM - 2:00 AM",
+      saturday: "1:00 PM - 8:00 PM",
+      sunday: "1:00 PM - 8:00 PM, 8:30 PM - 12:30 AM"
     }
   },
   {
@@ -115,9 +127,13 @@ export const streamers: Streamer[] = [
       instagram: "https://instagram.com/jess"
     },
     schedule: {
-      monday: "7:00 PM - 11:00 PM",
-      thursday: "8:00 PM - 12:00 AM",
-      saturday: "9:00 PM - 1:00 AM"
+      monday: "1:00 PM - 8:00 PM, 10:00 PM - 2:00 AM",
+      tuesday: "1:00 PM - 8:00 PM",
+      wednesday: "1:00 PM - 8:00 PM",
+      thursday: "1:00 PM - 8:00 PM, 9:00 PM - 1:00 AM",
+      friday: "1:00 PM - 8:00 PM",
+      saturday: "1:00 PM - 8:00 PM, 8:00 PM - 12:00 AM",
+      sunday: "1:00 PM - 8:00 PM"
     }
   },
   {
@@ -138,9 +154,13 @@ export const streamers: Streamer[] = [
       onlyfans: "https://onlyfans.com/bella"
     },
     schedule: {
-      tuesday: "6:00 PM - 10:00 PM",
-      friday: "7:00 PM - 11:00 PM",
-      sunday: "8:00 PM - 12:00 AM"
+      monday: "1:00 PM - 8:00 PM",
+      tuesday: "1:00 PM - 8:00 PM, 9:00 PM - 1:00 AM",
+      wednesday: "1:00 PM - 8:00 PM",
+      thursday: "1:00 PM - 8:00 PM",
+      friday: "1:00 PM - 8:00 PM, 8:30 PM - 12:30 AM",
+      saturday: "1:00 PM - 8:00 PM",
+      sunday: "1:00 PM - 8:00 PM, 9:30 PM - 1:30 AM"
     }
   }
 ]; 

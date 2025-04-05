@@ -9,9 +9,21 @@ export default function AgeVerification() {
   useEffect(() => {
     // Check if localStorage is available
     if (typeof window !== 'undefined') {
-      // Check if user has already verified their age
-      const hasVerified = localStorage.getItem('ageVerified');
-      if (!hasVerified) {
+      // Check if user has already verified their age and if the verification is still valid
+      const verificationData = localStorage.getItem('ageVerified');
+      if (verificationData) {
+        const { timestamp } = JSON.parse(verificationData);
+        const now = Date.now();
+        const tenMinutes = 10 * 60 * 1000; // 10 minutes in milliseconds
+        
+        // If more than 10 minutes have passed, show modal again
+        if (now - timestamp > tenMinutes) {
+          localStorage.removeItem('ageVerified');
+          setShowModal(true);
+        } else {
+          setShowModal(false);
+        }
+      } else {
         setShowModal(true);
       }
     }
@@ -19,7 +31,11 @@ export default function AgeVerification() {
 
   const handleAgree = () => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('ageVerified', 'true');
+      // Store verification time
+      localStorage.setItem('ageVerified', JSON.stringify({
+        verified: true,
+        timestamp: Date.now()
+      }));
     }
     setShowModal(false);
   };

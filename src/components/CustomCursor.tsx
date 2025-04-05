@@ -23,7 +23,7 @@ export default function CustomCursor() {
     if (!cursor) return;
 
     let rafId: number;
-    
+
     const onMouseMove = (e: MouseEvent) => {
       // Cancel any pending animation frame
       if (rafId) cancelAnimationFrame(rafId);

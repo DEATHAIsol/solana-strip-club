@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 import WalletContextProvider from '@/components/WalletContextProvider';
 import dynamic from 'next/dynamic';
 
+// Dynamically import CustomCursor with no SSR
 const CustomCursor = dynamic(() => import('@/components/CustomCursor'), { ssr: false });
 
 const inter = Inter({ subsets: ["latin"] });
