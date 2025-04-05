@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { FaHeart, FaStar, FaCrown, FaGem, FaFire, FaVolumeUp, FaVolumeDown, FaVolumeMute } from 'react-icons/fa';
+import { FaHeart, FaStar, FaCrown, FaGem, FaFire, FaVolumeUp, FaVolumeDown, FaVolumeMute, FaExpand } from 'react-icons/fa';
 import { Streamer } from '@/data/streamers';
 import DonateButton from './DonateButton';
 
@@ -33,7 +33,9 @@ export default function StreamPage({ streamer }: StreamPageProps) {
   const [volume, setVolume] = useState(0.5);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTipAmount, setSelectedTipAmount] = useState<number | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
 
   // Initialize video volume
   useEffect(() => {
@@ -92,6 +94,31 @@ export default function StreamPage({ streamer }: StreamPageProps) {
     }
   };
 
+  const toggleFullscreen = async () => {
+    if (!videoContainerRef.current) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await videoContainerRef.current.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (err) {
+      console.error('Error attempting to toggle fullscreen:', err);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6">
@@ -99,98 +126,82 @@ export default function StreamPage({ streamer }: StreamPageProps) {
         <div className="lg:col-span-2 space-y-3 sm:space-y-6">
           {/* Video Section */}
           <div 
-            className="aspect-video bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-lg overflow-hidden relative"
+            ref={videoContainerRef}
+            className="aspect-video bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-lg overflow-hidden relative group"
             onTouchStart={() => setShowControls(true)}
             onTouchEnd={() => setTimeout(() => setShowControls(false), 3000)}
             onMouseEnter={() => setShowControls(true)}
             onMouseLeave={() => setShowControls(false)}
           >
-            {streamer.videoUrl ? (
-              <>
-                <video
-                  ref={videoRef}
-                  className="w-full h-full object-cover"
-                  autoPlay
-                  loop
-                  playsInline
-                  poster={streamer.avatar}
-                  controlsList="nodownload nofullscreen noremoteplayback"
-                  disablePictureInPicture
-                  style={{ objectFit: 'cover' }}
-                >
-                  <source src={streamer.videoUrl} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-                {/* Custom Controls Overlay */}
-                <div 
-                  className={`absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}
-                >
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    {/* Volume Slider */}
-                    <div className="flex items-center gap-2 min-w-[100px] sm:min-w-[120px]">
-                      <button 
-                        onClick={() => {
-                          const newVolume = volume === 0 ? 0.5 : 0;
-                          setVolume(newVolume);
-                          if (videoRef.current) {
-                            videoRef.current.volume = newVolume;
-                            videoRef.current.muted = newVolume === 0;
-                          }
-                        }}
-                        className="text-white hover:text-white/80 transition-colors p-2 sm:p-1"
-                      >
-                        {volume === 0 ? (
-                          <FaVolumeMute size={20} />
-                        ) : volume < 0.5 ? (
-                          <FaVolumeDown size={20} />
-                        ) : (
-                          <FaVolumeUp size={20} />
-                        )}
-                      </button>
-                      <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value={volume}
-                        onChange={handleVolumeChange}
-                        className="w-full h-2 bg-white/30 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                      />
-                    </div>
-                    {/* Quality Selector (Placeholder) */}
-                    <div className="text-white text-sm">
-                      <select 
-                        className="bg-transparent border border-white/30 rounded px-3 py-2 text-base"
-                        onChange={(e) => {
-                          console.log('Quality changed to:', e.target.value);
-                        }}
-                        defaultValue="1080"
-                      >
-                        <option value="1080">1080p</option>
-                        <option value="720">720p</option>
-                        <option value="480">480p</option>
-                      </select>
-                    </div>
-                  </div>
+            <video
+              ref={videoRef}
+              src={streamer.videoUrl}
+              className="w-full h-full object-contain bg-black"
+              autoPlay
+              loop
+              playsInline
+              muted={volume === 0}
+            />
+            
+            {/* Custom Controls Overlay */}
+            <div 
+              className={`absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 ${
+                showControls ? 'opacity-100' : 'opacity-0'
+              } pointer-events-none`}
+            >
+              <div className="flex items-center gap-3 sm:gap-4 pointer-events-auto">
+                {/* Volume Control */}
+                <div className="flex items-center gap-2 min-w-[100px] sm:min-w-[120px]">
+                  <button 
+                    onClick={() => {
+                      const newVolume = volume === 0 ? 0.5 : 0;
+                      setVolume(newVolume);
+                      if (videoRef.current) {
+                        videoRef.current.volume = newVolume;
+                        videoRef.current.muted = newVolume === 0;
+                      }
+                    }}
+                    className="text-white hover:text-white/80 transition-colors p-2 sm:p-1"
+                  >
+                    {volume === 0 ? (
+                      <FaVolumeMute size={20} />
+                    ) : volume < 0.5 ? (
+                      <FaVolumeDown size={20} />
+                    ) : (
+                      <FaVolumeUp size={20} />
+                    )}
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={volume}
+                    onChange={handleVolumeChange}
+                    className="w-full h-2 bg-white/30 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                  />
                 </div>
-              </>
-            ) : streamer.streamUrl ? (
-              <iframe
-                src={streamer.streamUrl}
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                allowFullScreen
-                allow="autoplay; encrypted-media; picture-in-picture; web-share"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
-                className="w-full h-full"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <p className="text-2xl text-white/80">Stream Starting Soon...</p>
+
+                {/* Quality Selector */}
+                <select 
+                  className="bg-black/40 border border-white/30 rounded px-2 py-1 text-white text-sm"
+                  onChange={(e) => console.log('Quality changed to:', e.target.value)}
+                  defaultValue="1080"
+                >
+                  <option value="1080">1080p</option>
+                  <option value="720">720p</option>
+                  <option value="480">480p</option>
+                </select>
+
+                {/* Fullscreen Button */}
+                <button
+                  onClick={toggleFullscreen}
+                  className="text-white hover:text-white/80 transition-colors p-2"
+                >
+                  <FaExpand size={20} />
+                </button>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Tip Levels */}
