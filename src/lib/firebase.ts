@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getDatabase, Database } from 'firebase/database';
+import { getDatabase, Database, ref, set } from 'firebase/database';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -19,6 +19,19 @@ let database: Database | undefined;
 try {
   app = initializeApp(firebaseConfig);
   database = getDatabase(app);
+  
+  // Create a test user to initialize the structure
+  if (typeof window !== 'undefined' && database) {
+    const testUserRef = ref(database, 'users/test-user');
+    set(testUserRef, {
+      username: 'test',
+      createdAt: Date.now()
+    }).then(() => {
+      console.log('Test user created to initialize structure');
+    }).catch((error) => {
+      console.error('Error creating test user:', error);
+    });
+  }
 } catch (error) {
   console.error('Firebase initialization error:', error);
   // In development, we can continue without Firebase

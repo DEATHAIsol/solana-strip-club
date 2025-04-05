@@ -6,10 +6,7 @@ import ClientLayout from "@/components/ClientLayout";
 import AgeVerification from "@/components/AgeVerification";
 import { Toaster } from 'react-hot-toast';
 import WalletContextProvider from '@/components/WalletContextProvider';
-import dynamic from 'next/dynamic';
-
-// Dynamically import CustomCursor with no SSR
-const CustomCursor = dynamic(() => import('@/components/CustomCursor'), { ssr: false });
+import { Analytics } from '@vercel/analytics/react';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -49,7 +46,6 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className={`${inter.className} bg-black text-white antialiased`}>
-        <CustomCursor />
         <WalletContextProvider>
           <ClientLayout>
             <AgeVerification />
@@ -71,6 +67,7 @@ export default function RootLayout({
             />
           </ClientLayout>
         </WalletContextProvider>
+        <Analytics />
       </body>
     </html>
   );
