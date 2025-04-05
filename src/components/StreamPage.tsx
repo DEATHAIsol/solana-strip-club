@@ -8,7 +8,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { toast } from 'react-hot-toast';
 import { database } from '@/lib/firebase';
-import { ref, onValue, push, set, serverTimestamp, query, orderByChild, startAt } from 'firebase/database';
+import { ref, onValue, push, set, serverTimestamp, query, orderByChild, startAt, Database } from 'firebase/database';
 import { moderateMessage } from '@/utils/chatModeration';
 import { getAutomatedResponse, isCommand, handleCommand } from '@/utils/chatAutomation';
 
@@ -47,31 +47,27 @@ export default function StreamPage({ streamer }: StreamPageProps) {
 
   // Initialize Firebase listeners for chat
   useEffect(() => {
-    // Reference to this streamer's chat messages
-    const chatRef = ref(database, `chats/${streamer.username}`);
-    
-    // Query for messages from the last 5 minutes
-    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-    const recentMessagesQuery = query(
-      chatRef,
-      orderByChild('timestamp'),
-      startAt(fiveMinutesAgo)
-    );
+    if (!database) {
+      console.error('Firebase database not initialized');
+      return;
+    }
 
-    // Listen for new messages
-    const unsubscribe = onValue(recentMessagesQuery, (snapshot) => {
+    const chatRef = ref(database, `chats/${streamer.id}`);
+    const chatQuery = query(chatRef, orderByChild('timestamp'), startAt(Date.now() - 24 * 60 * 60 * 1000));
+
+    const unsubscribe = onValue(chatQuery, (snapshot) => {
       const messages: ChatMessage[] = [];
       snapshot.forEach((childSnapshot) => {
-        const message = childSnapshot.val() as ChatMessage;
-        message.key = childSnapshot.key || undefined;
-        messages.push(message);
+        messages.push({
+          ...childSnapshot.val(),
+          key: childSnapshot.key
+        });
       });
       setChatMessages(messages);
     });
 
-    // Cleanup listener on unmount
     return () => unsubscribe();
-  }, [streamer.username]);
+  }, [streamer.id]);
 
   const tipLevels = [
     { amount: 0.5, icon: <FaHeart className="text-pink-500" />, reward: 'Shoutout' },
@@ -88,71 +84,68 @@ export default function StreamPage({ streamer }: StreamPageProps) {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!connected || !publicKey) {
-      toast.error('Please connect your wallet to chat');
+    if (!chatMessage.trim()) return;
+
+    if (!database) {
+      console.error('Firebase database not initialized');
+      toast.error('Chat service is currently unavailable');
       return;
     }
-    
-    if (chatMessage.trim()) {
-      try {
-        // Check if it's a command
-        if (isCommand(chatMessage)) {
-          const response = handleCommand(chatMessage);
-          if (response) {
-            // Create a system message with the automated response
-            const systemMessage = {
-              user: 'System',
-              message: response,
-              timestamp: Date.now(),
-              isSystem: true
-            };
-            await push(ref(database, `chats/${streamer.username}`), systemMessage);
-            setChatMessage('');
-            return;
-          }
-        }
 
-        // Moderate the message
-        const { isAllowed, moderatedMessage, reason } = moderateMessage(chatMessage.trim());
-        
-        if (!isAllowed) {
-          toast.error(reason || 'Message not allowed');
-          return;
-        }
-
-        // Reference to this streamer's chat messages
-        const chatRef = ref(database, `chats/${streamer.username}`);
-        
-        // Create a new message with moderated content
-        const newMessage = {
-          user: 'You',
-          message: moderatedMessage,
-          timestamp: Date.now(),
-          publicKey: publicKey.toString()
-        };
-
-        // Push the new message
-        await push(chatRef, newMessage);
-
-        // Check for automated responses
-        const automatedResponse = getAutomatedResponse(moderatedMessage);
-        if (automatedResponse) {
-          // Create a system message with the automated response
+    try {
+      const moderationResult = moderateMessage(chatMessage);
+      if (!moderationResult.isAllowed) {
+        toast.error(moderationResult.reason || 'Message not allowed');
+        return;
+      }
+      
+      // Check for commands
+      if (isCommand(moderationResult.moderatedMessage)) {
+        const response = await handleCommand(moderationResult.moderatedMessage);
+        if (response) {
           const systemMessage = {
             user: 'System',
-            message: automatedResponse,
+            message: response,
             timestamp: Date.now(),
             isSystem: true
           };
-          await push(chatRef, systemMessage);
+          await push(ref(database, `chats/${streamer.id}`), systemMessage);
+          setChatMessage('');
+          return;
         }
-        
-        // Clear input
-        setChatMessage('');
-      } catch (error) {
-        console.error('Error sending message:', error);
-        toast.error('Failed to send message');
       }
+
+      // Check for automated responses
+      const autoResponse = getAutomatedResponse(moderationResult.moderatedMessage);
+      if (autoResponse) {
+        const systemMessage = {
+          user: 'System',
+          message: autoResponse,
+          timestamp: Date.now(),
+          isSystem: true
+        };
+        await push(ref(database, `chats/${streamer.id}`), systemMessage);
+      }
+
+      // Create a new message with moderated content
+      const newMessage = {
+        user: publicKey?.toString() || 'Anonymous',
+        message: moderationResult.moderatedMessage,
+        timestamp: Date.now(),
+        publicKey: publicKey?.toString()
+      };
+
+      // Reference to this streamer's chat messages
+      const chatRef = ref(database, `chats/${streamer.id}`);
+      
+      // Push the new message to the database
+      await push(chatRef, newMessage);
+      
+      // Clear the input field
+      setChatMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message');
     }
   };
 
