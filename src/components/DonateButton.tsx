@@ -15,12 +15,12 @@ interface DonateButtonProps {
   onClose?: () => void;
 }
 
-// Use mainnet connection
+// Use mainnet connection with GenesysGo RPC
 const connection = new Connection(
-  process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
+  process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://ssc-dao.genesysgo.net',
   {
     commitment: 'confirmed',
-    wsEndpoint: process.env.NEXT_PUBLIC_SOLANA_RPC_URL?.replace('https://', 'wss://') || 'wss://api.mainnet-beta.solana.com',
+    wsEndpoint: process.env.NEXT_PUBLIC_SOLANA_RPC_URL?.replace('https://', 'wss://') || 'wss://ssc-dao.genesysgo.net',
     confirmTransactionInitialTimeout: 60000, // 60 seconds
   }
 );
