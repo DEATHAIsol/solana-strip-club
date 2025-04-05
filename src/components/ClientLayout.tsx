@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaXTwitter, FaChartLine } from "react-icons/fa6";
 
 // Dynamically import WalletMultiButton with no SSR
 const WalletMultiButtonDynamic = dynamic(
@@ -36,6 +37,22 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 Schedule
               </Link>
               <WalletMultiButtonDynamic className="!bg-purple-600 !text-white hover:!bg-purple-700" />
+              <a 
+                href="https://x.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-white hover:text-pink-500 transition-colors"
+              >
+                <FaXTwitter size={24} />
+              </a>
+              <a 
+                href="https://dexscreener.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-white hover:text-pink-500 transition-colors"
+              >
+                <FaChartLine size={24} />
+              </a>
             </div>
 
             {/* Mobile Menu Button */}
@@ -74,6 +91,24 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               >
                 Schedule
               </Link>
+              <a
+                href="https://x.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-3 py-2 text-white hover:bg-pink-500/20 rounded-lg"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Twitter
+              </a>
+              <a
+                href="https://dexscreener.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-3 py-2 text-white hover:bg-pink-500/20 rounded-lg"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                DEXScreener
+              </a>
             </div>
           </div>
         </div>
