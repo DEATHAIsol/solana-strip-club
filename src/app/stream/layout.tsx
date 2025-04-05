@@ -1,6 +1,6 @@
 'use client';
 
-import { WalletContextProvider } from '@/components/WalletContextProvider';
+import WalletContextProvider from '@/components/WalletContextProvider';
 
 export default function StreamLayout({
   children,

@@ -1,6 +1,6 @@
 'use client';
 
-import { WalletContextProvider } from './WalletContextProvider';
+import WalletContextProvider from './WalletContextProvider';
 import WalletConnectButton from './WalletConnectButton';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {

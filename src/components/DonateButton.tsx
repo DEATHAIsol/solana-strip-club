@@ -1,45 +1,120 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram } from '@solana/web3.js';
+import { Connection, Transaction, clusterApiUrl } from '@solana/web3.js';
+import { DonationProgram } from '@/programs/donation_program';
+import { toast } from 'react-hot-toast';
 
 interface DonateButtonProps {
-  recipientAddress: string;
   streamerName: string;
+  recipientAddress: string;
+  presetAmount?: number | null;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export default function DonateButton({ recipientAddress, streamerName }: DonateButtonProps) {
+// Use mainnet connection
+const connection = new Connection(
+  process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
+  {
+    commitment: 'confirmed',
+    wsEndpoint: process.env.NEXT_PUBLIC_SOLANA_RPC_URL?.replace('https://', 'wss://') || 'wss://api.mainnet-beta.solana.com',
+  }
+);
+const donationProgram = new DonationProgram();
+
+export default function DonateButton({ 
+  streamerName, 
+  recipientAddress,
+  presetAmount = null,
+  isOpen = false,
+  onClose
+}: DonateButtonProps) {
   const { publicKey, sendTransaction } = useWallet();
-  const [amount, setAmount] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [amount, setAmount] = useState(presetAmount?.toString() || '');
+  const [isModalOpen, setIsModalOpen] = useState(isOpen);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update amount when presetAmount changes
+  useEffect(() => {
+    if (presetAmount !== null) {
+      setAmount(presetAmount.toString());
+    }
+  }, [presetAmount]);
+
+  // Sync modal state with isOpen prop
+  useEffect(() => {
+    setIsModalOpen(isOpen);
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+    onClose?.();
+    setAmount('');
+  };
 
   const handleDonate = async () => {
     if (!publicKey || !amount) return;
 
     try {
       setIsLoading(true);
-      const connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com');
       
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: publicKey,
-          toPubkey: new PublicKey(recipientAddress),
-          lamports: parseFloat(amount) * LAMPORTS_PER_SOL,
-        })
-      );
+      // Show processing toast early
+      const toastId = toast.loading('Preparing transaction...');
 
-      const signature = await sendTransaction(transaction, connection);
-      await connection.confirmTransaction(signature, 'confirmed');
+      try {
+        // Create the instruction
+        const instruction = await donationProgram.createDonationInstruction(
+          publicKey,
+          parseFloat(amount)
+        );
 
-      setAmount('');
-      setIsModalOpen(false);
-      // You might want to add a success notification here
+        // Get the latest blockhash
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
+
+        // Create and sign transaction
+        const transaction = new Transaction({
+          feePayer: publicKey,
+          blockhash: blockhash,
+          lastValidBlockHeight: lastValidBlockHeight,
+        }).add(instruction);
+
+        // Send transaction
+        toast.loading('Please approve the transaction in your wallet...', { id: toastId });
+        const signature = await sendTransaction(transaction, connection);
+
+        // Wait for confirmation
+        toast.loading('Processing transaction...', { id: toastId });
+        const confirmation = await connection.confirmTransaction({
+          signature,
+          blockhash,
+          lastValidBlockHeight
+        }, 'confirmed');
+
+        if (confirmation.value.err) {
+          console.error('Transaction error:', confirmation.value.err);
+          toast.error(`Transaction failed: ${confirmation.value.err}`, { id: toastId });
+        } else {
+          toast.success(`Successfully donated ${amount} SOL!`, { id: toastId });
+          handleClose();
+        }
+      } catch (err) {
+        console.error('Transaction error:', err);
+        if (err instanceof Error) {
+          if (err.message.includes('User rejected')) {
+            toast.error('Transaction cancelled by user', { id: toastId });
+          } else {
+            toast.error(`Error: ${err.message}`, { id: toastId });
+          }
+        } else {
+          toast.error('Failed to send donation', { id: toastId });
+        }
+      }
     } catch (error) {
-      console.error('Error:', error);
-      // You might want to add an error notification here
+      console.error('Connection error:', error);
+      toast.error('Failed to connect to Solana network');
     } finally {
       setIsLoading(false);
     }
@@ -49,27 +124,27 @@ export default function DonateButton({ recipientAddress, streamerName }: DonateB
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="bg-primary text-black px-6 py-3 rounded-lg font-bold hover:bg-[#00dd00] transition-colors"
+        className="w-full sm:w-auto bg-pink-500 hover:bg-pink-600 active:bg-pink-700 text-white px-6 py-3 rounded-lg font-bold transition-colors text-base sm:text-lg"
       >
-        Donate SOL
+        Custom Tip
       </button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background-card rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-white mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 sm:p-0">
+          <div className="bg-black/40 backdrop-blur-sm rounded-lg p-4 sm:p-6 w-full max-w-md mx-auto">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-4">
               Donate to {streamerName}
             </h3>
 
             {!publicKey ? (
               <div className="text-center">
-                <p className="text-gray-400 mb-4">Connect your wallet to donate</p>
-                <WalletMultiButton className="!bg-primary !text-black hover:!bg-[#00dd00]" />
+                <p className="text-gray-400 mb-4 text-sm sm:text-base">Connect your wallet to donate</p>
+                <WalletMultiButton className="!bg-pink-500 !text-white hover:!bg-pink-600 active:!bg-pink-700 !py-3 !text-base sm:!text-lg !rounded-lg" />
               </div>
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="amount" className="block text-sm font-medium text-gray-400 mb-1">
+                  <label htmlFor="amount" className="block text-sm font-medium text-gray-400 mb-2">
                     Amount (SOL)
                   </label>
                   <input
@@ -79,25 +154,26 @@ export default function DonateButton({ recipientAddress, streamerName }: DonateB
                     onChange={(e) => setAmount(e.target.value)}
                     min="0"
                     step="0.1"
-                    className="w-full bg-background-dark text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    inputMode="decimal"
+                    className="w-full bg-black/40 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-base sm:text-lg"
                     placeholder="0.0"
                   />
                 </div>
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="flex-1 bg-background-dark text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition-colors"
+                    onClick={handleClose}
+                    className="flex-1 bg-black/40 text-white px-4 py-3 rounded-lg hover:bg-opacity-80 active:bg-opacity-100 transition-colors text-base sm:text-lg"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleDonate}
-                    disabled={!amount || isLoading}
-                    className={`flex-1 bg-primary text-black px-4 py-2 rounded-lg font-bold ${
-                      !amount || isLoading
+                    disabled={!amount || isLoading || parseFloat(amount) <= 0}
+                    className={`flex-1 bg-pink-500 text-white px-4 py-3 rounded-lg font-bold text-base sm:text-lg ${
+                      !amount || isLoading || parseFloat(amount) <= 0
                         ? 'opacity-50 cursor-not-allowed'
-                        : 'hover:bg-[#00dd00]'
+                        : 'hover:bg-pink-600 active:bg-pink-700'
                     } transition-colors`}
                   >
                     {isLoading ? 'Processing...' : 'Send Donation'}

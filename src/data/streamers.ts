@@ -9,6 +9,8 @@ export interface Streamer {
   solanaAddress: string;
   totalDonations: number;
   topDonation: number;
+  streamUrl?: string;
+  videoUrl?: string;
   socialLinks: {
     twitter?: string;
     instagram?: string;
@@ -38,6 +40,8 @@ export const streamers: Streamer[] = [
     solanaAddress: "AmandaSolanaAddress123",
     totalDonations: 1500.75,
     topDonation: 250.00,
+    streamUrl: "https://chaturbate.com/ellaharperr/",
+    videoUrl: "/videos/amanda.mp4",
     socialLinks: {
       twitter: "https://twitter.com/amanda",
       instagram: "https://instagram.com/amanda",
@@ -60,6 +64,7 @@ export const streamers: Streamer[] = [
     solanaAddress: "CaitlinSolanaAddress123",
     totalDonations: 2100.50,
     topDonation: 300.00,
+    streamUrl: "https://www.twitch.tv/typicalgamer",
     socialLinks: {
       twitter: "https://twitter.com/caitlin",
       instagram: "https://instagram.com/caitlin"
@@ -81,6 +86,7 @@ export const streamers: Streamer[] = [
     solanaAddress: "GeorgiaSolanaAddress123",
     totalDonations: 1800.25,
     topDonation: 275.00,
+    streamUrl: "https://chaturbate.com/7e00aa2b-24d3-4968-9306-1d35debf09bc",
     socialLinks: {
       twitter: "https://twitter.com/georgia",
       instagram: "https://instagram.com/georgia",
@@ -103,6 +109,7 @@ export const streamers: Streamer[] = [
     solanaAddress: "JessSolanaAddress123",
     totalDonations: 1200.00,
     topDonation: 150.00,
+    streamUrl: "",
     socialLinks: {
       twitter: "https://twitter.com/jess",
       instagram: "https://instagram.com/jess"
@@ -118,12 +125,13 @@ export const streamers: Streamer[] = [
     username: "bella",
     displayName: "Bella",
     avatar: "/images/performers/bella.jpg",
-    isLive: false,
-    viewers: 0,
+    isLive: true,
+    viewers: 156,
     bio: "Bella here! 💋 Let's have some fun!",
     solanaAddress: "BellaSolanaAddress123",
     totalDonations: 900.50,
     topDonation: 125.00,
+    streamUrl: "https://www.youtube.com/embed/JMQcS-9z4Lg",
     socialLinks: {
       twitter: "https://twitter.com/bella",
       instagram: "https://instagram.com/bella",
