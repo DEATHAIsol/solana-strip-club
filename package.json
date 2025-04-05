@@ -9,10 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@firebase/auth": "^1.10.0",
-    "@firebase/firestore": "^4.7.10",
-    "@firebase/functions": "^0.12.3",
-    "@firebase/storage": "^0.13.7",
     "@fractalwagmi/solana-wallet-adapter": "^0.1.1",
     "@keystonehq/sdk": "^0.19.2",
     "@solana/wallet-adapter-base": "^0.9.23",
@@ -20,25 +16,24 @@
     "@solana/wallet-adapter-react-ui": "^0.9.34",
     "@solana/wallet-adapter-wallets": "^0.19.15",
     "@solana/web3.js": "^1.87.6",
-    "firebase": "^11.6.0",
-    "next": "14.2.26",
-    "qrcode.react": "^1.0.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-hot-toast": "^2.4.1",
-    "react-icons": "^5.0.1",
-    "react-qr-reader": "^2.2.1",
-    "undici": "^7.7.0"
+    "firebase": "10.8.0",
+    "next": "14.1.0",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-hot-toast": "2.4.1",
+    "react-icons": "5.0.1",
+    "react-qr-reader": "3.0.0-beta-1",
+    "qrcode.react": "1.0.1"
   },
   "devDependencies": {
-    "@types/node": "^20.11.19",
-    "@types/react": "^18.2.57",
-    "@types/react-dom": "^18.2.19",
-    "autoprefixer": "^10.4.17",
-    "eslint": "^8.56.0",
-    "eslint-config-next": "14.2.26",
-    "postcss": "^8.4.35",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5.3.3"
+    "@types/node": "20.11.19",
+    "@types/react": "17.0.75",
+    "@types/react-dom": "17.0.25",
+    "autoprefixer": "10.4.17",
+    "eslint": "8.56.0",
+    "eslint-config-next": "14.1.0",
+    "postcss": "8.4.35",
+    "tailwindcss": "3.4.1",
+    "typescript": "5.3.3"
   }
 }
