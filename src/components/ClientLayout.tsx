@@ -2,8 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import dynamic from 'next/dynamic';
 import { FaBars, FaTimes } from 'react-icons/fa';
+
+// Dynamically import WalletMultiButton with no SSR
+const WalletMultiButtonDynamic = dynamic(
+  () => import('@solana/wallet-adapter-react-ui').then((mod) => mod.WalletMultiButton),
+  { ssr: false }
+);
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -29,12 +35,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               <Link href="/schedule" className="text-white hover:text-pink-500 transition-colors">
                 Schedule
               </Link>
-              <WalletMultiButton className="!bg-purple-600 !text-white hover:!bg-purple-700" />
+              <WalletMultiButtonDynamic className="!bg-purple-600 !text-white hover:!bg-purple-700" />
             </div>
 
             {/* Mobile Menu Button */}
             <div className="sm:hidden flex items-center">
-              <WalletMultiButton className="!bg-purple-600 !text-white hover:!bg-purple-700 !py-2 !px-4 !text-sm mr-2" />
+              <WalletMultiButtonDynamic className="!bg-purple-600 !text-white hover:!bg-purple-700 !py-2 !px-4 !text-sm mr-2" />
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="text-white p-2"
@@ -72,7 +78,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           </div>
         </div>
       </nav>
-      <div className="pt-16">{children}</div>
+      <main className="pt-16">
+        {children}
+      </main>
     </div>
   );
 } 

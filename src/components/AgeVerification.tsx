@@ -7,15 +7,20 @@ export default function AgeVerification() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    // Check if user has already verified their age
-    const hasVerified = localStorage.getItem('ageVerified');
-    if (!hasVerified) {
-      setShowModal(true);
+    // Check if localStorage is available
+    if (typeof window !== 'undefined') {
+      // Check if user has already verified their age
+      const hasVerified = localStorage.getItem('ageVerified');
+      if (!hasVerified) {
+        setShowModal(true);
+      }
     }
   }, []);
 
   const handleAgree = () => {
-    localStorage.setItem('ageVerified', 'true');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ageVerified', 'true');
+    }
     setShowModal(false);
   };
 

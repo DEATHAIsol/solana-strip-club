@@ -43,7 +43,7 @@ export default function StreamPage({ streamer }: StreamPageProps) {
       videoRef.current.volume = volume;
       videoRef.current.muted = false;
     }
-  }, [videoRef.current]);
+  }, [volume]);
 
   // Clean up expired messages every second
   useEffect(() => {

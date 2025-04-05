@@ -2,6 +2,7 @@
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState } from 'react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 interface ChatProps {
   streamerName: string;
@@ -59,9 +60,7 @@ export default function Chat({ streamerName }: ChatProps) {
       ) : (
         <div className="p-6 border-t border-pink-500/20 text-center bg-gray-900/90">
           <p className="text-gray-400 mb-3">Connect your wallet to join the chat</p>
-          <button className="bg-pink-500/20 text-pink-300 px-6 py-2 rounded-full hover:bg-pink-500/30 transition-colors">
-            Connect Wallet 💝
-          </button>
+          <WalletMultiButton className="!bg-pink-500 !text-white hover:!bg-pink-600 active:!bg-pink-700 !py-2 !text-base !rounded-lg" />
         </div>
       )}
     </div>
