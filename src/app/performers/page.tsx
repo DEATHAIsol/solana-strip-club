@@ -1,11 +1,13 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { performers } from '@/data/performers';
 
 export default function PerformersPage() {
   const performers = [
     {
       name: 'Amanda',
+      username: 'amanda',
       image: '/images/performers/amanda.jpg',
       bio: "Hey there! I'm Amanda, your girl next door with a wild side. I love dancing, gaming, and making your day better! 💋",
       schedule: "Mon-Fri: 8PM-12AM EST",
@@ -13,6 +15,7 @@ export default function PerformersPage() {
     },
     {
       name: 'Caitlin',
+      username: 'caitlin',
       image: '/images/performers/caitlin.jpg',
       bio: "Sweet, spicy, and everything nice! Let me be your virtual girlfriend and show you a good time 💕",
       schedule: "Tue-Sat: 9PM-2AM EST",
@@ -20,42 +23,43 @@ export default function PerformersPage() {
     },
     {
       name: 'Georgia',
+      username: 'georgia',
       image: '/images/performers/georgia.jpg',
       bio: "Georgia here! Ready to make your fantasies come true. Join me for some unforgettable moments! ✨",
       schedule: "Wed-Sun: 7PM-1AM EST",
       specialties: ["Burlesque", "Theme Shows", "VIP Experiences"],
+    },
+    {
+      name: 'Jess',
+      username: 'jess',
+      image: '/images/performers/jess.jpg',
+      bio: "Hi loves! Jess here to make all your dreams come true. Let's have some fun together! 🌟",
+      schedule: "Thu-Mon: 6PM-11PM EST",
+      specialties: ["Dance Shows", "ASMR", "Personal Chat"],
+    },
+    {
+      name: 'Bella',
+      username: 'bella',
+      image: '/images/performers/bella.jpg',
+      bio: "Your Italian dream girl Bella here! Ready to spice up your evening with some special entertainment 🌹",
+      schedule: "Fri-Tue: 7PM-1AM EST",
+      specialties: ["Exotic Dance", "Role Play", "Premium Content"],
     }
   ]
 
   return (
-    <div className="min-h-screen">
-      <div className="relative h-[300px] mb-12">
-        <Image
-          src="/images/performers/banner.jpg"
-          alt="Performers Banner"
-          fill
-          className="object-cover brightness-50"
-          priority
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="flex justify-center gap-3 mb-4">
-              <span className="animate-bounce delay-100">💝</span>
-              <span className="animate-bounce delay-200">💖</span>
-              <span className="animate-bounce delay-300">💓</span>
-            </div>
-            <h1 className="text-5xl font-bold text-[#FF1493] mb-4">Our Performers</h1>
-            <p className="text-xl text-[#FF1493]/80">Connect with your favorite creators 💕</p>
-          </div>
+    <div className="min-h-screen bg-black">
+      <div className="flex flex-col items-center pt-4">
+        <div className="flex gap-1">
+          <span>💝</span>
+          <span>💖</span>
+          <span>💓</span>
         </div>
+        <h1 className="text-5xl font-bold text-[#FF1493] mt-2">Our Performers</h1>
+        <p className="text-[#FF1493]/80 mt-2">Connect with your favorite creators 💕</p>
       </div>
 
-      <div className="container mx-auto px-4 py-12">
-        <h1 className="text-[#FF1493] text-4xl font-bold text-center mb-4">
-          Meet Our Performers
-        </h1>
-        <p className="text-[#FF1493]/80 text-center mb-12">Find your perfect match 💘</p>
-
+      <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 gap-12">
           {performers.map((performer, index) => (
             <div 
@@ -108,9 +112,12 @@ export default function PerformersPage() {
                     </div>
                   </div>
 
-                  <button className="w-full bg-[#FF1493] text-white font-bold py-3 rounded-lg hover:bg-[#FF1493]/80 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                  <Link 
+                    href={`/stream/${performer.username}`}
+                    className="block w-full bg-[#FF1493] text-white font-bold py-3 rounded-lg hover:bg-[#FF1493]/80 transition-all transform hover:scale-[1.02] active:scale-[0.98] text-center"
+                  >
                     Join Stream 💕
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

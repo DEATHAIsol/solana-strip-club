@@ -1,15 +1,14 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-import { streamers, type Streamer } from '@/data/streamers';
+import { streamers } from '@/data/streamers';
 import StreamPage from '@/components/StreamPage';
+import { notFound } from 'next/navigation';
 
-export default function Page() {
-  const params = useParams();
-  const streamer = streamers.find(s => s.username === params.username);
+export default function Page({ params }: { params: { username: string } }) {
+  const streamer = streamers.find(s => s.username.toLowerCase() === params.username.toLowerCase());
 
   if (!streamer) {
-    return <div>Streamer not found</div>;
+    return notFound();
   }
 
   return <StreamPage streamer={streamer} />;

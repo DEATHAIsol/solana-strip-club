@@ -6,12 +6,8 @@ import { streamers } from '@/data/streamers';
 import WalletConnectButton from '@/components/WalletConnectButton';
 
 export default function Home() {
-  // Get the first 3 streamers
-  const featuredStreamers = streamers.slice(0, 3);
-
-  const handleJoinStream = (youtubeUrl: string) => {
-    window.open(youtubeUrl, '_blank');
-  };
+  // Show all streamers instead of just first 3
+  const featuredStreamers = streamers;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -75,9 +71,9 @@ export default function Home() {
             </div>
             <div className="p-4">
               <p className="text-white mb-4 group-hover:text-pink-200 transition-colors">{streamer.bio}</p>
-              <button 
-                onClick={() => handleJoinStream(streamer.youtubeUrl)}
-                className="w-full bg-[#FF1493] text-white font-bold py-3 rounded-lg transition-all duration-300
+              <Link 
+                href={`/stream/${streamer.username.toLowerCase()}`}
+                className="block w-full bg-[#FF1493] text-white font-bold py-3 rounded-lg text-center transition-all duration-300
                   hover:bg-[#FF1493]/80 hover:shadow-[0_0_20px_rgba(255,20,147,0.4)]
                   transform hover:scale-[1.02] active:scale-[0.98]
                   relative overflow-hidden group/button
@@ -88,7 +84,7 @@ export default function Home() {
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   Join Stream <span className="group-hover/button:animate-bounce">💕</span>
                 </span>
-              </button>
+              </Link>
             </div>
           </div>
         ))}

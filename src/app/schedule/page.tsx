@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { streamers } from '@/data/streamers';
+import Link from 'next/link';
 
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -59,12 +60,12 @@ export default function SchedulePage() {
                   </p>
                 </div>
               </div>
-              <button 
-                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-full"
-                onClick={() => window.open(streamer.youtubeUrl || 'https://www.youtube.com/watch?v=ysR-4J3Tz3M', '_blank')}
+              <Link 
+                href={`/stream/${streamer.username.toLowerCase()}`}
+                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-full inline-flex items-center gap-2"
               >
-                Join Stream
-              </button>
+                Join Stream <span className="text-lg">💕</span>
+              </Link>
             </div>
           ))}
         </div>

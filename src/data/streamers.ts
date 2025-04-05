@@ -1,22 +1,10 @@
-export type Schedule = {
-  [key: string]: string | undefined;
-  monday?: string;
-  tuesday?: string;
-  wednesday?: string;
-  thursday?: string;
-  friday?: string;
-  saturday?: string;
-  sunday?: string;
-};
-
-export type Streamer = {
+export interface Streamer {
   id: number;
   username: string;
   displayName: string;
   avatar: string;
   isLive: boolean;
   viewers: number;
-  youtubeUrl: string;
   bio: string;
   solanaAddress: string;
   totalDonations: number;
@@ -24,10 +12,19 @@ export type Streamer = {
   socialLinks: {
     twitter?: string;
     instagram?: string;
-    tiktok?: string;
+    onlyfans?: string;
   };
-  schedule: Schedule;
-};
+  schedule: {
+    [key: string]: string | undefined;
+    monday?: string;
+    tuesday?: string;
+    wednesday?: string;
+    thursday?: string;
+    friday?: string;
+    saturday?: string;
+    sunday?: string;
+  };
+}
 
 export const streamers: Streamer[] = [
   {
@@ -37,21 +34,20 @@ export const streamers: Streamer[] = [
     avatar: "/images/performers/amanda.jpg",
     isLive: true,
     viewers: 1234,
-    youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     bio: "Hey, I'm Amanda! Come hang out with me 💋",
-    solanaAddress: "7xKXJNz3wnwqNY9gqrcF9BXvBzWF2V9UkH7tdug9AM8B",
-    totalDonations: 2500,
-    topDonation: 500,
+    solanaAddress: "AmandaSolanaAddress123",
+    totalDonations: 1500.75,
+    topDonation: 250.00,
     socialLinks: {
       twitter: "https://twitter.com/amanda",
       instagram: "https://instagram.com/amanda",
-      tiktok: "https://tiktok.com/@amanda",
+      onlyfans: "https://onlyfans.com/amanda"
     },
     schedule: {
-      monday: "8PM - 12AM",
-      wednesday: "9PM - 1AM",
-      friday: "10PM - 2AM",
-    },
+      monday: "8:00 PM - 12:00 AM",
+      wednesday: "9:00 PM - 1:00 AM",
+      friday: "10:00 PM - 2:00 AM"
+    }
   },
   {
     id: 2,
@@ -60,20 +56,19 @@ export const streamers: Streamer[] = [
     avatar: "/images/performers/caitlin.jpg",
     isLive: true,
     viewers: 856,
-    youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     bio: "Caitlin here! Let's have some fun together 💕",
-    solanaAddress: "3mNPx7KYz2dxXqJ4H8rjFv9qZ2cF4WvY6B8tR5ugNM2E",
-    totalDonations: 1800,
-    topDonation: 300,
+    solanaAddress: "CaitlinSolanaAddress123",
+    totalDonations: 2100.50,
+    topDonation: 300.00,
     socialLinks: {
       twitter: "https://twitter.com/caitlin",
-      instagram: "https://instagram.com/caitlin",
+      instagram: "https://instagram.com/caitlin"
     },
     schedule: {
-      tuesday: "9PM - 1AM",
-      thursday: "8PM - 12AM",
-      saturday: "10PM - 2AM",
-    },
+      tuesday: "7:00 PM - 11:00 PM",
+      thursday: "8:00 PM - 12:00 AM",
+      saturday: "9:00 PM - 1:00 AM"
+    }
   },
   {
     id: 3,
@@ -82,64 +77,62 @@ export const streamers: Streamer[] = [
     avatar: "/images/performers/georgia.jpg",
     isLive: true,
     viewers: 567,
-    youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    bio: "Georgia 💫 Come join my stream!",
-    solanaAddress: "9pQRx7KYz2dxXqJ4H8rjFv9qZ2cF4WvY6B8tR5ugNM2E",
-    totalDonations: 1500,
-    topDonation: 250,
+    bio: "Georgia 💋 Come join my stream!",
+    solanaAddress: "GeorgiaSolanaAddress123",
+    totalDonations: 1800.25,
+    topDonation: 275.00,
     socialLinks: {
       twitter: "https://twitter.com/georgia",
       instagram: "https://instagram.com/georgia",
+      onlyfans: "https://onlyfans.com/georgia"
     },
     schedule: {
-      wednesday: "7PM - 11PM",
-      friday: "8PM - 12AM",
-      sunday: "9PM - 1AM",
-    },
+      wednesday: "6:00 PM - 10:00 PM",
+      friday: "7:00 PM - 11:00 PM",
+      sunday: "8:00 PM - 12:00 AM"
+    }
   },
   {
     id: 4,
     username: "jess",
     displayName: "Jess",
     avatar: "/images/performers/jess.jpg",
-    isLive: true,
-    viewers: 432,
-    youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    bio: "It's Jess! Let's make some memories 💝",
-    solanaAddress: "2kLMx7KYz2dxXqJ4H8rjFv9qZ2cF4WvY6B8tR5ugNM2E",
-    totalDonations: 1200,
-    topDonation: 200,
+    isLive: false,
+    viewers: 0,
+    bio: "Hey! I'm Jess 💕 Love gaming and chatting!",
+    solanaAddress: "JessSolanaAddress123",
+    totalDonations: 1200.00,
+    topDonation: 150.00,
     socialLinks: {
       twitter: "https://twitter.com/jess",
-      instagram: "https://instagram.com/jess",
+      instagram: "https://instagram.com/jess"
     },
     schedule: {
-      monday: "7PM - 11PM",
-      thursday: "9PM - 1AM",
-      saturday: "8PM - 12AM",
-    },
+      monday: "7:00 PM - 11:00 PM",
+      thursday: "8:00 PM - 12:00 AM",
+      saturday: "9:00 PM - 1:00 AM"
+    }
   },
   {
     id: 5,
     username: "bella",
     displayName: "Bella",
     avatar: "/images/performers/bella.jpg",
-    isLive: true,
-    viewers: 789,
-    youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    bio: "Bella here! Ready to party? 🎉",
-    solanaAddress: "5tWXx7KYz2dxXqJ4H8rjFv9qZ2cF4WvY6B8tR5ugNM2E",
-    totalDonations: 900,
-    topDonation: 150,
+    isLive: false,
+    viewers: 0,
+    bio: "Bella here! 💋 Let's have some fun!",
+    solanaAddress: "BellaSolanaAddress123",
+    totalDonations: 900.50,
+    topDonation: 125.00,
     socialLinks: {
       twitter: "https://twitter.com/bella",
       instagram: "https://instagram.com/bella",
-      tiktok: "https://tiktok.com/@bella",
+      onlyfans: "https://onlyfans.com/bella"
     },
     schedule: {
-      tuesday: "8PM - 12AM",
-      friday: "9PM - 1AM",
-      sunday: "7PM - 11PM",
-    },
-  },
+      tuesday: "6:00 PM - 10:00 PM",
+      friday: "7:00 PM - 11:00 PM",
+      sunday: "8:00 PM - 12:00 AM"
+    }
+  }
 ]; 
