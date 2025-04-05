@@ -125,10 +125,15 @@ export default function StreamPage({ streamer }: StreamPageProps) {
     });
   }, [connected, username, hasCheckedUsername]);
 
+  // Determine if we should show the username modal - simplified logic
+  const shouldShowUsernameModal = connected && !username;
+
   const handleUsernameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🎯 Username submit triggered:', { tempUsername });
     
     if (!connected || !publicKey || !database) {
+      console.error('❌ Missing requirements:', { connected, publicKey, database });
       toast.error('Please connect your wallet first');
       return;
     }
@@ -371,14 +376,11 @@ export default function StreamPage({ streamer }: StreamPageProps) {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Determine if we should show the username modal - simplified logic
-  const shouldShowUsernameModal = connected && !username;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-2 sm:p-4">
       {/* Username Modal */}
       {shouldShowUsernameModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]" style={{ pointerEvents: 'auto' }}>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]">
           <div className="bg-gray-900 p-6 rounded-lg border border-pink-500/20 w-96">
             <h3 className="text-lg font-semibold text-pink-400 mb-4">Create your chat username</h3>
             <form onSubmit={handleUsernameSubmit} className="space-y-4">
