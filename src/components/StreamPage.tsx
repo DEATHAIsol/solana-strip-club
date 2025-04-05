@@ -8,7 +8,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { toast } from 'react-hot-toast';
 import { database } from '@/lib/firebase';
-import { ref, onValue, push, set, serverTimestamp, query, orderByChild, startAt, Database } from 'firebase/database';
+import { ref, onValue, push, set, serverTimestamp, query, orderByChild, startAt, Database, get } from 'firebase/database';
 import { moderateMessage } from '@/utils/chatModeration';
 import { getAutomatedResponse, isCommand, handleCommand } from '@/utils/chatAutomation';
 
@@ -34,8 +34,141 @@ export default function StreamPage({ streamer }: StreamPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTipAmount, setSelectedTipAmount] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [username, setUsername] = useState<string>('');
+  const [tempUsername, setTempUsername] = useState('');
+  const [hasCheckedUsername, setHasCheckedUsername] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Debug username state
+  useEffect(() => {
+    console.log('🔄 Username State:', {
+      connected,
+      publicKey: publicKey?.toString(),
+      username,
+      tempUsername,
+      hasCheckedUsername,
+      timestamp: new Date().toISOString()
+    });
+  }, [connected, publicKey, username, tempUsername, hasCheckedUsername]);
+
+  // Check username when wallet connects
+  useEffect(() => {
+    const checkUsername = async () => {
+      if (!connected || !publicKey || !database) {
+        console.log('❌ Missing requirements:', { 
+          connected, 
+          hasPublicKey: !!publicKey, 
+          hasDatabase: !!database,
+          timestamp: new Date().toISOString()
+        });
+        setUsername('');
+        setHasCheckedUsername(true);
+        return;
+      }
+
+      try {
+        console.log('🔍 Checking username for wallet:', publicKey.toString());
+        const userRef = ref(database, `users/${publicKey.toString()}`);
+        const snapshot = await get(userRef);
+
+        console.log('📥 Firebase response:', {
+          exists: snapshot.exists(),
+          data: snapshot.val(),
+          timestamp: new Date().toISOString()
+        });
+
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          console.log('✅ Found existing username:', userData.username);
+          if (userData.username && typeof userData.username === 'string' && userData.username.length >= 3) {
+            setUsername(userData.username);
+          } else {
+            console.log('❌ Invalid username in database, forcing prompt');
+            setUsername('');
+          }
+        } else {
+          console.log('❌ No username found - user must create one');
+          setUsername('');
+        }
+      } catch (error) {
+        console.error('⚠️ Error checking username:', error);
+        setUsername('');
+      } finally {
+        setHasCheckedUsername(true);
+      }
+    };
+
+    if (connected && publicKey) {
+      console.log('🎯 Wallet connected - checking username');
+      setHasCheckedUsername(false);
+      checkUsername();
+    } else {
+      console.log('🔌 Wallet disconnected - resetting states');
+      setUsername('');
+      setTempUsername('');
+      setHasCheckedUsername(false);
+    }
+  }, [connected, publicKey]);
+
+  const handleUsernameSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!connected || !publicKey || !database) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+    
+    if (!tempUsername.trim()) {
+      toast.error('Username cannot be empty');
+      return;
+    }
+    
+    if (tempUsername.length < 3 || tempUsername.length > 15) {
+      toast.error('Username must be between 3-15 characters');
+      return;
+    }
+
+    // Don't allow wallet addresses as usernames
+    if (tempUsername.match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)) {
+      toast.error('Cannot use wallet address as username');
+      return;
+    }
+
+    try {
+      console.log('💾 Saving username:', tempUsername);
+      
+      // Check if username is taken
+      const usersRef = ref(database, 'users');
+      const snapshot = await get(usersRef);
+      const users = snapshot.val() || {};
+      
+      const isUsernameTaken = Object.values(users).some(
+        (user: any) => user.username?.toLowerCase() === tempUsername.toLowerCase()
+      );
+
+      if (isUsernameTaken) {
+        toast.error('Username is already taken');
+        return;
+      }
+
+      // Now save the user data
+      const userRef = ref(database, `users/${publicKey.toString()}`);
+      await set(userRef, {
+        username: tempUsername.trim(),
+        createdAt: Date.now()
+      });
+      
+      console.log('✅ Username saved successfully');
+      setUsername(tempUsername.trim());
+      setTempUsername('');
+      toast.success('Username set successfully!');
+    } catch (error) {
+      console.error('⚠️ Error saving username:', error);
+      toast.error('Failed to save username. Please try again.');
+    }
+  };
 
   // Initialize video volume
   useEffect(() => {
@@ -45,6 +178,13 @@ export default function StreamPage({ streamer }: StreamPageProps) {
     }
   }, [volume]);
 
+  // Auto-scroll chat when new messages arrive
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
   // Initialize Firebase listeners for chat
   useEffect(() => {
     if (!database) {
@@ -52,18 +192,35 @@ export default function StreamPage({ streamer }: StreamPageProps) {
       return;
     }
 
-    const chatRef = ref(database, `chats/${streamer.id}`);
-    const chatQuery = query(chatRef, orderByChild('timestamp'), startAt(Date.now() - 24 * 60 * 60 * 1000));
+    const chatRef = ref(database as Database, `chats/${streamer.id}`);
+    const chatQuery = query(chatRef, orderByChild('timestamp'), startAt(Date.now() - 300 * 1000)); // Last 300 seconds
 
     const unsubscribe = onValue(chatQuery, (snapshot) => {
+      if (!database) return;
+      
       const messages: ChatMessage[] = [];
+      const now = Date.now();
+      
       snapshot.forEach((childSnapshot) => {
-        messages.push({
-          ...childSnapshot.val(),
-          key: childSnapshot.key
-        });
+        const message = childSnapshot.val();
+        const messageAge = now - message.timestamp;
+        
+        // Only include messages less than 300 seconds old
+        if (messageAge < 300 * 1000) {
+          messages.push({
+            ...message,
+            key: childSnapshot.key
+          });
+        } else {
+          // Delete old messages
+          const messageRef = ref(database as Database, `chats/${streamer.id}/${childSnapshot.key}`);
+          set(messageRef, null).catch(console.error);
+        }
       });
-      setChatMessages(messages);
+      
+      // Sort messages by timestamp in ascending order
+      const sortedMessages = messages.sort((a, b) => a.timestamp - b.timestamp);
+      setChatMessages(sortedMessages);
     });
 
     return () => unsubscribe();
@@ -92,6 +249,12 @@ export default function StreamPage({ streamer }: StreamPageProps) {
       return;
     }
 
+    // Check message length
+    if (chatMessage.length > 100) {
+      toast.error('Message is too long (max 100 characters)');
+      return;
+    }
+
     try {
       const moderationResult = moderateMessage(chatMessage);
       if (!moderationResult.isAllowed) {
@@ -104,7 +267,7 @@ export default function StreamPage({ streamer }: StreamPageProps) {
         const response = await handleCommand(moderationResult.moderatedMessage);
         if (response) {
           const systemMessage = {
-            user: 'System',
+            user: 'Mod',
             message: response,
             timestamp: Date.now(),
             isSystem: true
@@ -119,7 +282,7 @@ export default function StreamPage({ streamer }: StreamPageProps) {
       const autoResponse = getAutomatedResponse(moderationResult.moderatedMessage);
       if (autoResponse) {
         const systemMessage = {
-          user: 'System',
+          user: 'Mod',
           message: autoResponse,
           timestamp: Date.now(),
           isSystem: true
@@ -127,9 +290,9 @@ export default function StreamPage({ streamer }: StreamPageProps) {
         await push(ref(database, `chats/${streamer.id}`), systemMessage);
       }
 
-      // Create a new message with moderated content
+      // Create a new message with moderated content and username
       const newMessage = {
-        user: publicKey?.toString() || 'Anonymous',
+        user: username,
         message: moderationResult.moderatedMessage,
         timestamp: Date.now(),
         publicKey: publicKey?.toString()
@@ -195,8 +358,40 @@ export default function StreamPage({ streamer }: StreamPageProps) {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Determine if we should show the username modal
+  const shouldShowUsernameModal = connected && !username && hasCheckedUsername;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-2 sm:p-4">
+      {/* Username Modal */}
+      {shouldShowUsernameModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]" style={{ pointerEvents: 'auto' }}>
+          <div className="bg-gray-900 p-6 rounded-lg border border-pink-500/20 w-96">
+            <h3 className="text-lg font-semibold text-pink-400 mb-4">Create your chat username</h3>
+            <form onSubmit={handleUsernameSubmit} className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  value={tempUsername}
+                  onChange={(e) => setTempUsername(e.target.value)}
+                  placeholder="Enter username (3-15 characters)"
+                  className="w-full bg-gray-800 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/50 border border-pink-500/20"
+                  maxLength={15}
+                  autoFocus
+                />
+                <p className="text-gray-400 text-xs mt-1">This will be your permanent chat name</p>
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600 transition-colors"
+              >
+                Set Username
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6">
         {/* Main Stream Section */}
         <div className="lg:col-span-2 space-y-3 sm:space-y-6">
@@ -324,9 +519,15 @@ export default function StreamPage({ streamer }: StreamPageProps) {
           <div className="bg-black/40 p-4 sm:p-6 rounded-lg">
             <h3 className="text-xl font-bold mb-3 sm:mb-4">Chat</h3>
             <div className="h-[300px] sm:h-[400px] flex flex-col">
-              <div className="flex-1 overflow-y-auto space-y-2 mb-3 sm:mb-4">
+              <div 
+                ref={chatContainerRef}
+                className="flex-1 overflow-y-auto overflow-x-hidden space-y-2 mb-3 sm:mb-4 scroll-smooth"
+              >
                 {chatMessages.map((msg, i) => (
-                  <div key={i} className="bg-black/40 p-2 rounded-lg text-sm sm:text-base">
+                  <div 
+                    key={msg.key || i} 
+                    className="bg-black/40 p-2 rounded-lg text-sm sm:text-base break-words"
+                  >
                     <span className={`font-bold ${
                       msg.isSystem ? 'text-green-400' : 
                       msg.publicKey === publicKey?.toString() ? 'text-pink-400' : 'text-white'
@@ -335,7 +536,7 @@ export default function StreamPage({ streamer }: StreamPageProps) {
                     </span>
                     <span className="ml-2">{msg.message}</span>
                     <span className="text-xs text-gray-500 ml-2">
-                      {Math.floor((5 * 60 * 1000 - (Date.now() - msg.timestamp)) / 1000)}s
+                      {Math.floor((300 * 1000 - (Date.now() - msg.timestamp)) / 1000)}s
                     </span>
                   </div>
                 ))}
@@ -347,16 +548,22 @@ export default function StreamPage({ streamer }: StreamPageProps) {
                       type="text"
                       value={chatMessage}
                       onChange={(e) => setChatMessage(e.target.value)}
-                      placeholder="Type a message..."
-                      className="flex-1 bg-black/40 p-2 rounded-lg text-base"
+                      placeholder={username ? "Type a message (max 100 chars)..." : "Set a username first"}
+                      disabled={!username}
+                      maxLength={100}
+                      className="flex-1 bg-black/40 p-2 rounded-lg text-base disabled:opacity-50"
                     />
                     <button
                       type="submit"
-                      className="bg-pink-500 hover:bg-pink-600 active:bg-pink-700 px-4 py-2 rounded-lg text-base"
+                      disabled={!username}
+                      className="bg-pink-500 hover:bg-pink-600 active:bg-pink-700 px-4 py-2 rounded-lg text-base disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                       Send
                     </button>
                   </div>
+                  {connected && !username && (
+                    <p className="text-pink-400 text-sm mt-2">Please set a username to chat</p>
+                  )}
                 </form>
               ) : (
                 <div className="mt-auto text-center p-4 bg-black/20 rounded-lg">

@@ -488,16 +488,54 @@ const bannedWords = [
   // Add more banned words here
 ];
 
-export function moderateMessage(message: string): {
+interface ModerationResult {
   isAllowed: boolean;
   moderatedMessage: string;
   reason?: string;
-} {
-  if (!message || typeof message !== 'string') {
+}
+
+export function moderateMessage(message: string): ModerationResult {
+  // Convert to lowercase for checking
+  const lowerMessage = message.trim().toLowerCase();
+  
+  // Basic spam prevention
+  if (message.length > 100) {
     return {
       isAllowed: false,
-      moderatedMessage: '',
-      reason: 'Invalid message format'
+      moderatedMessage: message,
+      reason: 'Message too long (max 100 characters)'
+    };
+  }
+
+  // Prevent empty or whitespace-only messages
+  if (!message.trim()) {
+    return {
+      isAllowed: false,
+      moderatedMessage: message,
+      reason: 'Message cannot be empty'
+    };
+  }
+
+  // Prevent excessive caps (if more than 70% of letters are uppercase)
+  const letters = message.replace(/[^a-zA-Z]/g, '');
+  if (letters.length > 0) {
+    const upperCaseLetters = letters.replace(/[^A-Z]/g, '');
+    if (upperCaseLetters.length / letters.length > 0.7) {
+      return {
+        isAllowed: false,
+        moderatedMessage: message,
+        reason: 'Too many capital letters'
+      };
+    }
+  }
+
+  // Prevent excessive repetition
+  const repeatedChars = message.match(/(.)\1{4,}/g);
+  if (repeatedChars) {
+    return {
+      isAllowed: false,
+      moderatedMessage: message,
+      reason: 'Excessive character repetition'
     };
   }
 
