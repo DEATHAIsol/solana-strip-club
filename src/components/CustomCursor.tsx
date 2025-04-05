@@ -8,6 +8,10 @@ export default function CustomCursor() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Check if it's a mobile device
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+    if (isMobile) return;
+
     // Create a single style element for cursor hiding
     const style = document.createElement('style');
     style.textContent = `
@@ -54,23 +58,11 @@ export default function CustomCursor() {
   }, [pathname]);
 
   return (
-    <div className="custom-cursor">
-      <div
-        ref={cursorRef}
-        className="custom-cursor-heart"
-        style={{
-          position: 'fixed',
-          top: -10,
-          left: -10,
-          fontSize: '24px',
-          opacity: 0,
-          pointerEvents: 'none',
-          zIndex: 2147483647,
-          transform: 'translate3d(0, 0, 0)',
-          willChange: 'transform',
-        }}
-      >
-        ❤️
+    <div ref={cursorRef} className="custom-cursor">
+      <div className="custom-cursor-heart">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-pink-500">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
       </div>
     </div>
   );

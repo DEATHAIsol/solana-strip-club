@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "@solana/wallet-adapter-react-ui/styles.css";
@@ -13,11 +13,18 @@ const CustomCursor = dynamic(() => import('@/components/CustomCursor'), { ssr: f
 
 const inter = Inter({ subsets: ["latin"] });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: '#ec4899', // pink-500
+};
+
 export const metadata: Metadata = {
   title: "Solana Strip Club",
   description: "Live streaming platform on Solana",
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
-  themeColor: '#ec4899', // pink-500
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

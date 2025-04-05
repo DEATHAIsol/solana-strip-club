@@ -2,20 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Root level cursor hiding */
-:root {
-  cursor: none !important;
-}
+/* Root level cursor hiding - only on desktop */
+@media (min-width: 768px) {
+  :root {
+    cursor: none !important;
+  }
 
-/* Hide cursor on all elements */
-* {
-  cursor: none !important;
-}
+  /* Hide cursor on all elements */
+  * {
+    cursor: none !important;
+  }
 
-/* Only show pointer on wallet elements */
-.wallet-adapter-button,
-.wallet-adapter-modal-container * {
-  cursor: pointer !important;
+  /* Only show pointer on wallet elements */
+  .wallet-adapter-button,
+  .wallet-adapter-modal-container * {
+    cursor: pointer !important;
+  }
 }
 
 /* Custom cursor container */
@@ -29,6 +31,14 @@
   z-index: 2147483647;
   overflow: hidden;
   contain: strict;
+  display: none; /* Hidden by default */
+}
+
+/* Show custom cursor only on desktop */
+@media (min-width: 768px) {
+  .custom-cursor {
+    display: block; /* Show on desktop */
+  }
 }
 
 /* Custom cursor heart */
