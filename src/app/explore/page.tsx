@@ -1,6 +1,7 @@
 'use client';
 
 import { streamers } from '@/data/streamers';
+import Link from 'next/link';
 
 export default function ExplorePage() {
   return (
@@ -50,12 +51,12 @@ export default function ExplorePage() {
                   </p>
                 </div>
                 
-                <button
-                  onClick={() => window.open(streamer.youtubeUrl || 'https://www.youtube.com/watch?v=ysR-4J3Tz3M', '_blank')}
+                <Link
+                  href={`/stream/${streamer.username.toLowerCase()}`}
                   className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-full transition-colors duration-200"
                 >
-                  {streamer.isLive ? 'Join Stream' : 'View Profile'}
-                </button>
+                  {streamer.isLive ? 'Join Stream 💕' : 'View Profile 💝'}
+                </Link>
               </div>
             </div>
           </div>
